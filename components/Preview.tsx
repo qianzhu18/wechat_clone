@@ -45,14 +45,21 @@ export const Preview: React.FC = () => {
         </div>
 
         {/* WeChat Nav Bar */}
-        <div className="h-[44px] bg-wechat-toolbar flex justify-between items-center px-3 border-b border-wechat-divider z-20 relative shrink-0">
+        <div className="h-[44px] bg-wechat-toolbar flex items-center px-3 border-b border-wechat-divider z-20 relative shrink-0">
           <div className="flex items-center w-20 shrink-0">
             <ChevronLeft size={26} className="text-black -ml-1" strokeWidth={2} />
           </div>
           
           {/* Title with collapse protection */}
-          <div className={`font-medium text-[17px] flex-1 text-center px-2 text-[#111111] ${config.isPrivacyMode ? 'blur-[4px]' : ''} overflow-hidden whitespace-nowrap text-ellipsis shrink-0 max-w-[60%]`}>
-            {config.chatTitle}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[60%] px-2">
+            <div className="relative">
+              <div className="font-medium text-[17px] text-center text-[#111111] overflow-hidden whitespace-nowrap text-ellipsis">
+                {config.chatTitle}
+              </div>
+              {config.isPrivacyMode && (
+                <div className="absolute inset-0 bg-white/85 pointer-events-none"></div>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center justify-end w-20 shrink-0">
@@ -78,11 +85,14 @@ export const Preview: React.FC = () => {
             return (
               <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'} gap-[10px] mb-2`}>
                 {!isMe && (
-                  <img 
-                    src={avatarSrc} 
-                    className={`w-[40px] h-[40px] rounded-[6px] flex-shrink-0 object-cover ${config.isPrivacyMode ? 'blur-[4px]' : ''}`}
-                    alt="avatar"
-                  />
+                  <div className="relative w-[40px] h-[40px] rounded-[6px] flex-shrink-0 overflow-hidden">
+                    <img 
+                      src={avatarSrc} 
+                      className="w-full h-full object-cover"
+                      alt="avatar"
+                    />
+                    {config.isPrivacyMode && <div className="absolute inset-0 bg-white/85 pointer-events-none"></div>}
+                  </div>
                 )}
                 
                 <div className={`max-w-[72%] relative`}>
@@ -137,11 +147,14 @@ export const Preview: React.FC = () => {
                 </div>
 
                 {isMe && (
-                  <img 
-                    src={avatarSrc} 
-                    className={`w-[40px] h-[40px] rounded-[6px] flex-shrink-0 object-cover ${config.isPrivacyMode ? 'blur-[4px]' : ''}`}
-                    alt="avatar"
-                  />
+                  <div className="relative w-[40px] h-[40px] rounded-[6px] flex-shrink-0 overflow-hidden">
+                    <img 
+                      src={avatarSrc} 
+                      className="w-full h-full object-cover"
+                      alt="avatar"
+                    />
+                    {config.isPrivacyMode && <div className="absolute inset-0 bg-white/85 pointer-events-none"></div>}
+                  </div>
                 )}
               </div>
             );

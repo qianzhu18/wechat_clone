@@ -9,10 +9,11 @@ const DEFAULT_CONFIG = {
   chatTitle: '文件传输助手',
   isPrivacyMode: false,
   showFooter: false,
-  footerQrCodeUrl: 'https://picsum.photos/200/200',
+  // 使用内联 SVG，避免跨域图片导致导出失败
+  footerQrCodeUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="%23f4f4f5"/><path d="M10 10h60v60H10zM130 10h60v60h-60zM10 130h60v60H10zM70 70h60v60H70zM130 130h60v60h-60z" fill="%23181818"/></svg>',
   footerText: '长按识别二维码',
-  myAvatar: 'https://picsum.photos/100/100?random=1',
-  otherAvatar: 'https://picsum.photos/100/100?random=2',
+  myAvatar: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" rx="12" fill="%2395ec69"/><circle cx="50" cy="38" r="18" fill="%230a0a0a" opacity="0.12"/><rect x="25" y="62" width="50" height="22" rx="11" fill="%230a0a0a" opacity="0.12"/></svg>',
+  otherAvatar: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" rx="12" fill="%23e5e7eb"/><circle cx="50" cy="38" r="18" fill="%230a0a0a" opacity="0.18"/><rect x="25" y="62" width="50" height="22" rx="11" fill="%230a0a0a" opacity="0.18"/></svg>',
 };
 
 const DEFAULT_MESSAGES: MessageItem[] = [
