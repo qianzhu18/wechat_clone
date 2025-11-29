@@ -46,24 +46,24 @@ export const Preview: React.FC = () => {
 
         {/* WeChat Nav Bar */}
         <div className="h-[44px] bg-wechat-toolbar flex items-center px-3 border-b border-wechat-divider z-20 relative shrink-0">
-          <div className="flex items-center w-20 shrink-0">
-            <ChevronLeft size={26} className="text-black -ml-1" strokeWidth={2} />
+          <div className="flex items-center justify-start w-16 shrink-0">
+            <ChevronLeft size={24} className="text-black" strokeWidth={2} />
           </div>
           
           {/* Title with collapse protection */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[60%] px-2">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] max-w-[75%] px-2">
             <div className="relative">
-              <div className="font-medium text-[17px] text-center text-[#111111] overflow-hidden whitespace-nowrap text-ellipsis">
+              <div className="font-medium text-[17px] leading-none text-center text-[#111111] overflow-hidden whitespace-nowrap text-ellipsis">
                 {config.chatTitle}
               </div>
               {config.isPrivacyMode && (
-                <div className="absolute inset-0 bg-white/85 pointer-events-none"></div>
+                <div className="absolute inset-0 bg-white/85 pointer-events-none" />
               )}
             </div>
           </div>
           
-          <div className="flex items-center justify-end w-20 shrink-0">
-            <MoreHorizontal size={24} className="text-black" />
+          <div className="flex items-center justify-end w-16 shrink-0">
+            <MoreHorizontal size={22} className="text-black" />
           </div>
         </div>
 
@@ -163,18 +163,18 @@ export const Preview: React.FC = () => {
 
         {/* WeChat Input Bar (Visual Only) */}
         {!config.showFooter && (
-          <div className="h-[56px] bg-wechat-toolbar border-t border-wechat-divider px-3 flex items-center gap-3 shrink-0">
+          <div className="h-[56px] bg-wechat-toolbar border-top border-wechat-divider px-3 flex items-center gap-2 shrink-0 border-t">
             <div className="flex-shrink-0">
-                <div className="w-7 h-7 rounded-full border border-black/80 flex items-center justify-center">
-                    <Mic size={16} className="text-black/80" strokeWidth={2} />
-                </div>
+              <div className="w-8 h-8 rounded-full bg-white border border-black/70 flex items-center justify-center">
+                <Mic size={16} className="text-black/80" strokeWidth={2} />
+              </div>
             </div>
             
             <div className="flex-1 bg-white h-10 rounded-[6px] border border-wechat-divider"></div>
             
-            <div className="flex-shrink-0 flex items-center gap-4">
-                <Smile size={28} className="text-black/80" strokeWidth={1.5} />
-                <PlusCircle size={28} className="text-black/80" strokeWidth={1.5} />
+            <div className="flex-shrink-0 flex items-center gap-3">
+                <Smile size={26} className="text-black/80" strokeWidth={1.5} />
+                <PlusCircle size={26} className="text-black/80" strokeWidth={1.5} />
             </div>
           </div>
         )}
