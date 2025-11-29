@@ -68,7 +68,7 @@ export const Preview: React.FC = () => {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 bg-wechat-bg overflow-y-auto p-4 space-y-4 no-scrollbar">
+        <div id="chat-scroll-area" className="flex-1 bg-wechat-bg overflow-y-auto p-4 space-y-4 no-scrollbar">
           {messages.map((msg) => {
             // System Time Message
             if (msg.type === 'system_time') {

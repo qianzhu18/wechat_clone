@@ -78,6 +78,14 @@ export const exportImage = async (elementId: string, fileName: string = 'wechat-
   clone.style.transform = 'none';
   document.body.appendChild(clone);
 
+  // 解除滚动容器的裁剪，确保长对话完整导出
+  const chatArea = clone.querySelector<HTMLElement>('#chat-scroll-area');
+  if (chatArea) {
+    chatArea.style.overflow = 'visible';
+    chatArea.style.maxHeight = 'none';
+    chatArea.style.height = 'auto';
+  }
+
   let restoreImages: (() => void) | null = null;
 
   try {
