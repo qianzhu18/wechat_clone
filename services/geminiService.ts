@@ -3,14 +3,14 @@ import { MessageItem } from '../types';
 /**
  * AI 接口：参考“参考 API 调研.md”中的调用方式，走 baseUrl/chat/completions
  * 默认读取环境变量：
- *  - VITE_AI_BASE_URL（或 process.env.VITE_AI_BASE_URL）默认 https://api.siliconflow.cn/v1
+ *  - VITE_AI_BASE_URL（或 process.env.VITE_AI_BASE_URL）默认 https://api-mfr5n9z2q3r62eub.aistudio-app.com/v1
  *  - VITE_AI_API_KEY（或 process.env.VITE_AI_API_KEY / API_KEY）
- *  - VITE_AI_MODEL（可选，默认 gpt-4o-mini）
+ *  - VITE_AI_MODEL（可选，默认 qwen3:32b）
  */
 const API_BASE_URL =
   (import.meta as any).env?.VITE_AI_BASE_URL ||
   (typeof process !== 'undefined' ? (process.env.VITE_AI_BASE_URL || process.env.API_BASE_URL) : '') ||
-  'https://api.siliconflow.cn/v1';
+  'https://api-mfr5n9z2q3r62eub.aistudio-app.com/v1';
 
 const API_KEY =
   (import.meta as any).env?.VITE_AI_API_KEY ||
@@ -20,7 +20,7 @@ const API_KEY =
 const MODEL =
   (import.meta as any).env?.VITE_AI_MODEL ||
   (typeof process !== 'undefined' ? process.env.VITE_AI_MODEL : '') ||
-  'gpt-4o-mini';
+  'qwen3:32b';
 
 const systemInstruction = `
 You are a WeChat conversation generator.
