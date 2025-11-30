@@ -58,8 +58,7 @@ export const generateScript = async (prompt: string, count: number): Promise<Mes
         { role: 'system', content: systemInstruction },
         { role: 'user', content: userPrompt },
       ],
-      temperature: 0.7,
-      response_format: { type: 'json_object' },
+      temperature: 0.7
     }),
   });
 
@@ -75,26 +74,65 @@ export const generateScript = async (prompt: string, count: number): Promise<Mes
     '';
 
   const cleaned = stripCodeFence((rawContent || '').trim());
-  let parsed: any;
-  try {
-    parsed = JSON.parse(cleaned);
-    // Some APIs wrap with {messages:[...]}
-    if (parsed && Array.isArray(parsed.messages)) {
-      parsed = parsed.messages;
+
+  // 尝试 JSON 解析，兼容多种返回结构
+  const normalizeMessages = (parsed: any): MessageItem[] => {
+    // 如果是数组
+    if (Array.isArray(parsed)) {
+      return parsed.map((item: any) => ({
+        id: crypto.randomUUID(),
+        role: item.role === 'other' ? 'other' : 'me',
+        type: 'text',
+        content: item.content || '',
+      }));
     }
+    // 如果是对象且包含 messages 数组
+    if (parsed && Array.isArray(parsed.messages)) {
+      return parsed.messages.map((item: any) => ({
+        id: crypto.randomUUID(),
+        role: item.role === 'other' ? 'other' : 'me',
+        type: 'text',
+        content: item.content || '',
+      }));
+    }
+    // 如果是对象且有 role/content，视为单条
+    if (parsed && typeof parsed === 'object' && parsed.content) {
+      return [
+        {
+          id: crypto.randomUUID(),
+          role: parsed.role === 'other' ? 'other' : 'me',
+          type: 'text',
+          content: parsed.content,
+        },
+      ];
+    }
+    // 如果是字符串，视为单条消息内容
+    if (typeof parsed === 'string') {
+      return [
+        {
+          id: crypto.randomUUID(),
+          role: 'other',
+          type: 'text',
+          content: parsed,
+        },
+      ];
+    }
+    throw new Error('AI response format not recognized.');
+  };
+
+  try {
+    const parsed = JSON.parse(cleaned);
+    return normalizeMessages(parsed);
   } catch (e) {
-    console.error('AI response JSON parse failed, raw content:', cleaned);
-    throw new Error('AI response is not valid JSON.');
+    // 如果不是有效 JSON，直接作为单条文本
+    console.warn('AI response JSON parse failed, fallback to raw text:', cleaned);
+    return [
+      {
+        id: crypto.randomUUID(),
+        role: 'other',
+        type: 'text',
+        content: cleaned,
+      },
+    ];
   }
-
-  if (!Array.isArray(parsed)) {
-    throw new Error('AI response JSON is not an array.');
-  }
-
-  return parsed.map((item: any) => ({
-    id: crypto.randomUUID(),
-    role: item.role === 'other' ? 'other' : 'me',
-    type: 'text',
-    content: item.content || '',
-  }));
 };
