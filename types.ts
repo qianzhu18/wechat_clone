@@ -54,5 +54,6 @@ export interface AppState {
   removeMessage: (id: string) => void;
   setMessages: (msgs: MessageItem[]) => void;
   togglePrivacy: () => void;
+  swapRoles: () => void;
   moveMessage: (id: string, direction: 'up' | 'down') => void;
 }

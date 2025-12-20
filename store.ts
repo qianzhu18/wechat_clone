@@ -53,6 +53,26 @@ export const useStore = create<AppState>((set) => ({
     config: { ...state.config, isPrivacyMode: !state.config.isPrivacyMode }
   })),
 
+  swapRoles: () => set((state) => {
+    const swappedMessages = state.messages.map((msg) => ({
+      ...msg,
+      role: msg.role === 'me' ? 'other' : 'me',
+    }));
+
+    const swappedConfig = {
+      ...state.config,
+      rightRoleLabel: state.config.leftRoleLabel,
+      leftRoleLabel: state.config.rightRoleLabel,
+      myAvatar: state.config.otherAvatar,
+      otherAvatar: state.config.myAvatar,
+    };
+
+    return {
+      messages: swappedMessages,
+      config: swappedConfig,
+    };
+  }),
+
   moveMessage: (id, direction) => set((state) => {
     const index = state.messages.findIndex(m => m.id === id);
     if (index === -1) return {};

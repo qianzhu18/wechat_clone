@@ -171,7 +171,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ className }) => {
                   />
                 </div>
               </div>
-              <p className="text-[11px] text-indigo-800/80 mt-2">AI 会按上方身份自动映射左右气泡，避免把商家/客户说反。</p>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-[11px] text-indigo-800/80">AI 会按上方身份自动映射左右气泡，避免把商家/客户说反。</p>
+                <button
+                  type="button"
+                  onClick={store.swapRoles}
+                  className="text-[11px] font-semibold text-indigo-700 hover:text-indigo-900 underline-offset-2 underline"
+                >
+                  左右互换
+                </button>
+              </div>
               {error && <p className="text-red-500 text-xs mt-2 flex items-center gap-1"><AlertCircle size={12}/> {error}</p>}
             </div>
 
