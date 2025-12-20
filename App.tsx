@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ControlPanel } from './components/ControlPanel';
 import { Preview } from './components/Preview';
-import { Edit2, Eye, ChevronLeft, Download } from 'lucide-react';
+import { Edit2, Eye, ChevronLeft, Download, Camera } from 'lucide-react';
 import { exportImage } from './utils/imageUtils';
 
 const App: React.FC = () => {
@@ -10,6 +10,16 @@ const App: React.FC = () => {
   const handleMobileExport = async () => {
      try {
        await exportImage('preview-container', `wechat-mock-${Date.now()}.png`);
+     } catch(e) {
+       // handled
+     }
+  };
+
+  const handleMobileCleanExport = async () => {
+     try {
+       await exportImage('preview-container', `wechat-mock-clean-${Date.now()}.png`, {
+         hideSelectors: ['.status-bar'],
+       });
      } catch(e) {
        // handled
      }
@@ -27,19 +37,27 @@ const App: React.FC = () => {
 
         {/* Floating Control Layer (Mobile Only in Preview Mode) */}
         {mobileTab === 'preview' && (
-          <div className="absolute top-0 left-0 w-full z-50 flex justify-between p-4 bg-black/60 backdrop-blur-sm text-white md:hidden">
+          <div className="absolute top-0 left-0 w-full z-50 flex justify-between items-center p-4 bg-black/70 text-white md:hidden">
             <button 
               onClick={() => setMobileTab('editor')}
               className="flex items-center gap-1 text-sm font-medium bg-white/10 px-3 py-2 rounded-full hover:bg-white/20 transition-colors"
             >
                <ChevronLeft size={16} /> 返回编辑
             </button>
-            <button 
-              onClick={handleMobileExport}
-              className="flex items-center gap-1 text-sm font-medium bg-wechat-green text-black px-3 py-2 rounded-full hover:opacity-90 transition-colors"
-            >
-               保存图片 <Download size={16} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={handleMobileCleanExport}
+                className="flex items-center gap-1 text-sm font-medium bg-white/10 px-3 py-2 rounded-full hover:bg-white/20 transition-colors"
+              >
+                 纯净截图 <Camera size={16} />
+              </button>
+              <button 
+                onClick={handleMobileExport}
+                className="flex items-center gap-1 text-sm font-medium bg-wechat-green text-black px-3 py-2 rounded-full hover:opacity-90 transition-colors"
+              >
+                 保存图片 <Download size={16} />
+              </button>
+            </div>
           </div>
         )}
       </div>

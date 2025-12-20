@@ -1,4 +1,9 @@
-import { MessageItem } from '../types';
+import { MessageItem, MessageRole } from '../types';
+
+interface GenerateScriptOptions {
+  meRoleName?: string;
+  otherRoleName?: string;
+}
 
 /**
  * AI 接口：参考“参考 API 调研.md”中的调用方式，走 baseUrl/chat/completions
@@ -22,15 +27,19 @@ const MODEL =
   (typeof process !== 'undefined' ? process.env.VITE_AI_MODEL : '') ||
   'moonshotai/Kimi-K2-Instruct-0905';
 
-const systemInstruction = `
-You are a WeChat conversation generator.
-Rules:
-1) Language: Simplified Chinese with full-width punctuation（，。？！）.
-2) Roles: only "me" (right bubble) and "other" (left bubble).
-3) Tone: casual, friendly, supports emojis.
-4) Output strictly JSON array, no code fences, no markdown.
-   Example: [{"role":"me","content":"你好"}, {"role":"other","content":"在的"}]
-5) Do NOT include system time messages.
+const buildSystemInstruction = (meRoleName: string, otherRoleName: string) => `
+你是微信对话脚本生成助手，必须输出可直接解析的 JSON 数组，每个元素形如 {"role":"me"|"other","content":"..."}。
+严格的身份与左右映射：
+- "me" = 右侧气泡 = 「${meRoleName}」
+- "other" = 左侧气泡 = 「${otherRoleName}」
+约束：
+1) 第一句必须是 role "other"（左侧）开场，随后尽量轮流。
+2) 只写对话正文，不要在 content 里加「${meRoleName}:」等前缀、不要系统时间、不要 Markdown/代码块。
+示例：
+[
+  {"role":"other","content":"${otherRoleName}开场提问"},
+  {"role":"me","content":"${meRoleName}回应"}
+]
 `;
 
 const stripCodeFence = (text: string) => {
@@ -39,12 +48,24 @@ const stripCodeFence = (text: string) => {
   return fenceMatch ? fenceMatch[1] : text;
 };
 
-export const generateScript = async (prompt: string, count: number): Promise<MessageItem[]> => {
+const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const cleanSpeakerPrefix = (content: string, meRoleName: string, otherRoleName: string) => {
+  if (!content) return '';
+  const names = [meRoleName, otherRoleName].filter(Boolean).map(escapeRegExp).join('|');
+  if (!names) return content;
+  return content.replace(new RegExp(`^\\s*(?:${names})[：:]\\s*`, 'u'), '').trim();
+};
+
+export const generateScript = async (prompt: string, count: number, options: GenerateScriptOptions = {}): Promise<MessageItem[]> => {
   if (!API_KEY) {
     throw new Error('AI API Key is missing. Set VITE_AI_API_KEY or API_KEY.');
   }
 
-  const userPrompt = `Scenario: ${prompt}. Generate about ${count} turns as JSON array with role+content. Only return JSON array.`;
+  const meRoleName = (options.meRoleName || '商家').trim();
+  const otherRoleName = (options.otherRoleName || '客户').trim();
+
+  const userPrompt = `场景：${prompt}。生成大约 ${count} 轮往来，首句必须由「${otherRoleName}」(role=other, 左侧) 开场，随后双方自然轮流，确保「${meRoleName}」始终 role=me (右侧)。不要系统时间，不要 Markdown，仅返回 JSON 数组（键只包含 role, content）。`;
 
   const response = await fetch(`${API_BASE_URL}/chat/completions`, {
     method: 'POST',
@@ -55,7 +76,7 @@ export const generateScript = async (prompt: string, count: number): Promise<Mes
     body: JSON.stringify({
       model: MODEL,
       messages: [
-        { role: 'system', content: systemInstruction },
+        { role: 'system', content: buildSystemInstruction(meRoleName, otherRoleName) },
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.7
@@ -77,47 +98,87 @@ export const generateScript = async (prompt: string, count: number): Promise<Mes
 
   // 尝试 JSON 解析，兼容多种返回结构
   const normalizeMessages = (parsed: any): MessageItem[] => {
-    // 如果是数组
+    const normalized: MessageItem[] = [];
+
+    const resolveRole = (item: any): MessageRole => {
+      const rawRole = (item?.role || '').toString().toLowerCase();
+      const roleHints: Record<string, MessageRole> = {
+        me: 'me',
+        self: 'me',
+        right: 'me',
+        seller: 'me',
+        merchant: 'me',
+        assistant: 'me',
+        ai: 'me',
+        other: 'other',
+        left: 'other',
+        buyer: 'other',
+        customer: 'other',
+        user: 'other',
+        client: 'other'
+      };
+      if (roleHints[rawRole]) return roleHints[rawRole];
+
+      const speaker = (item?.speaker || item?.name || '').toString().trim();
+      if (speaker) {
+        if (speaker.includes(meRoleName)) return 'me';
+        if (speaker.includes(otherRoleName)) return 'other';
+      }
+
+      const side = (item?.side || item?.position || '').toString().toLowerCase();
+      if (side === 'right') return 'me';
+      if (side === 'left') return 'other';
+
+      const rawContent = (item?.content || '') as string;
+      if (typeof rawContent === 'string') {
+        if (rawContent.startsWith(`${meRoleName}:`) || rawContent.startsWith(`${meRoleName}：`)) return 'me';
+        if (rawContent.startsWith(`${otherRoleName}:`) || rawContent.startsWith(`${otherRoleName}：`)) return 'other';
+      }
+
+      if (!normalized.length) return 'other';
+      return normalized[normalized.length - 1].role === 'me' ? 'other' : 'me';
+    };
+
+    const pushItem = (item: any) => {
+      const role = resolveRole(item);
+      const rawContent = typeof item === 'string' ? item : item?.content ?? '';
+      const cleanedContent = cleanSpeakerPrefix(
+        typeof rawContent === 'string' ? rawContent : String(rawContent || ''),
+        meRoleName,
+        otherRoleName
+      );
+
+      normalized.push({
+        id: crypto.randomUUID(),
+        role,
+        type: 'text',
+        content: cleanedContent,
+      });
+    };
+
     if (Array.isArray(parsed)) {
-      return parsed.map((item: any) => ({
-        id: crypto.randomUUID(),
-        role: item.role === 'other' ? 'other' : 'me',
-        type: 'text',
-        content: item.content || '',
-      }));
+      parsed.forEach(pushItem);
+    } else if (parsed && Array.isArray(parsed.messages)) {
+      parsed.messages.forEach(pushItem);
+    } else if (parsed && typeof parsed === 'object' && parsed.content) {
+      pushItem(parsed);
+    } else if (typeof parsed === 'string') {
+      pushItem({ role: 'other', content: parsed });
+    } else {
+      throw new Error('AI response format not recognized.');
     }
-    // 如果是对象且包含 messages 数组
-    if (parsed && Array.isArray(parsed.messages)) {
-      return parsed.messages.map((item: any) => ({
-        id: crypto.randomUUID(),
-        role: item.role === 'other' ? 'other' : 'me',
-        type: 'text',
-        content: item.content || '',
-      }));
+
+    const isAlternating = normalized.every((msg, idx) => idx === 0 || msg.role !== normalized[idx - 1].role);
+    if (isAlternating && normalized[0]?.role === 'me') {
+      // 整段反了，翻转左右
+      return normalized.map((msg) => ({ ...msg, role: msg.role === 'me' ? 'other' : 'me' }));
     }
-    // 如果是对象且有 role/content，视为单条
-    if (parsed && typeof parsed === 'object' && parsed.content) {
-      return [
-        {
-          id: crypto.randomUUID(),
-          role: parsed.role === 'other' ? 'other' : 'me',
-          type: 'text',
-          content: parsed.content,
-        },
-      ];
+
+    if (normalized[0] && normalized[0].role !== 'other') {
+      normalized[0] = { ...normalized[0], role: 'other' };
     }
-    // 如果是字符串，视为单条消息内容
-    if (typeof parsed === 'string') {
-      return [
-        {
-          id: crypto.randomUUID(),
-          role: 'other',
-          type: 'text',
-          content: parsed,
-        },
-      ];
-    }
-    throw new Error('AI response format not recognized.');
+
+    return normalized;
   };
 
   try {

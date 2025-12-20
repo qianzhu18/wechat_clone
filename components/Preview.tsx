@@ -10,6 +10,8 @@ export const Preview: React.FC = () => {
     return 'bg-black';
   };
 
+  const batteryLevel = Math.max(0, Math.min(100, config.battery));
+
   return (
     <div className="w-full h-full bg-gray-900 flex items-center justify-center p-0 md:p-8 overflow-hidden relative">
        {/* Device Frame */}
@@ -18,52 +20,59 @@ export const Preview: React.FC = () => {
         className="bg-wechat-bg relative w-full h-full md:w-[375px] md:h-[812px] shadow-2xl overflow-hidden flex flex-col font-ios select-none"
       >
         {/* Status Bar */}
-        <div className="h-[47px] bg-wechat-toolbar flex justify-between items-end px-6 pb-2 text-black z-20 shrink-0">
-          <div className="font-semibold text-[15px] leading-none tracking-tight">{config.time}</div>
-          <div className="flex items-center gap-1.5">
-            {config.signal === 'wifi' && <Wifi size={18} className="text-black" strokeWidth={2.5} />}
+        <div className="status-bar h-[26px] bg-[#f8f8f8] flex items-center justify-between px-3 text-black z-20 shrink-0 border-b border-wechat-divider">
+          <div className="text-[12px] font-semibold tracking-tight">{config.time}</div>
+          <div className="flex items-center gap-2">
+            {config.signal === 'wifi' && <Wifi size={16} className="text-black" strokeWidth={2.2} />}
             {config.signal !== 'wifi' && (
-              <div className="flex items-end gap-[2px]">
-                 <div className="w-[3px] h-1.5 bg-black rounded-[0.5px]"></div>
-                 <div className="w-[3px] h-2.5 bg-black rounded-[0.5px]"></div>
-                 <div className="w-[3px] h-3.5 bg-black rounded-[0.5px]"></div>
-                 <div className="w-[3px] h-2.5 bg-gray-300 rounded-[0.5px]"></div>
+              <div className="flex items-end gap-[2px] text-black">
+                 <div className="w-[3px] h-1.5 bg-black rounded-[1px]"></div>
+                 <div className="w-[3px] h-2.5 bg-black rounded-[1px]"></div>
+                 <div className="w-[3px] h-3.5 bg-black rounded-[1px]"></div>
+                 <div className="w-[3px] h-2.5 bg-gray-300 rounded-[1px]"></div>
               </div>
             )}
-            {config.signal !== 'wifi' && <span className="text-[12px] font-bold ml-1">{config.signal.toUpperCase()}</span>}
-            
-            <div className="flex items-center ml-1">
-               <div className="w-[22px] h-[11px] border border-gray-400 rounded-[3px] p-[1px] relative opacity-80">
+            {config.signal !== 'wifi' && <span className="text-[11px] font-semibold ml-0.5">{config.signal.toUpperCase()}</span>}
+            <div className="flex items-center gap-1 ml-1">
+               <div className="relative w-[25px] h-[12px] border border-black/70 rounded-[3px]">
                   <div 
-                    className={`h-full rounded-[1px] ${getBatteryColor(config.battery)}`} 
-                    style={{ width: `${config.battery}%` }} 
+                    className={`absolute left-[2px] top-[2px] h-[8px] rounded-[2px] ${getBatteryColor(batteryLevel)}`} 
+                    style={{ width: `${batteryLevel * 0.21}px` }} 
                   />
-                  <div className="absolute -right-[3.5px] top-[3px] w-[2px] h-1 bg-gray-400 rounded-r-sm"></div>
+                  <div className="absolute -right-[4px] top-[4px] w-[2px] h-[4px] bg-black/70 rounded-sm"></div>
                </div>
+               <span className="text-[11px] font-semibold">{batteryLevel}%</span>
             </div>
           </div>
         </div>
 
         {/* WeChat Nav Bar */}
-        <div className="h-[44px] bg-wechat-toolbar flex items-center px-3 border-b border-wechat-divider z-20 relative shrink-0">
-          <div className="flex items-center w-20 shrink-0">
-            <ChevronLeft size={26} className="text-black -ml-1" strokeWidth={2} />
+        <div className="h-[44px] min-h-[44px] bg-wechat-toolbar border-b border-wechat-divider z-20 shrink-0 px-3 relative flex items-center overflow-hidden">
+          {/* Left: back + badge */}
+          <div className="flex items-center gap-2 min-w-[88px]">
+            <ChevronLeft size={22} className="text-black" strokeWidth={2.3} />
+            {config.navBadge?.trim() ? (
+              <span className="px-2 py-[3px] rounded-full bg-black/6 text-[12px] leading-[14px] text-black/70 border border-black/5 whitespace-nowrap">
+                {config.navBadge}
+              </span>
+            ) : null}
           </div>
           
-          {/* Title with collapse protection */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[60%] px-2">
+          {/* Title with absolute centering to avoid compression */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-2 max-w-[64%] text-center">
             <div className="relative">
-              <div className="font-medium text-[17px] text-center text-[#111111] overflow-hidden whitespace-nowrap text-ellipsis">
+              <div className="font-semibold text-[17px] text-center text-[#111111] overflow-hidden whitespace-nowrap text-ellipsis leading-[22px]">
                 {config.chatTitle}
               </div>
               {config.isPrivacyMode && (
-                <div className="absolute inset-0 bg-white/85 pointer-events-none"></div>
+                <div className="privacy-mask privacy-mask-strong rounded-[4px]" />
               )}
             </div>
           </div>
           
-          <div className="flex items-center justify-end w-20 shrink-0">
-            <MoreHorizontal size={24} className="text-black" />
+          {/* Right: more */}
+          <div className="flex items-center justify-end ml-auto w-[88px]">
+            <MoreHorizontal size={22} className="text-black" />
           </div>
         </div>
 
@@ -91,7 +100,7 @@ export const Preview: React.FC = () => {
                       className="w-full h-full object-cover"
                       alt="avatar"
                     />
-                    {config.isPrivacyMode && <div className="absolute inset-0 bg-white/85 pointer-events-none"></div>}
+                    {config.isPrivacyMode && <div className="privacy-mask privacy-mask-strong"></div>}
                   </div>
                 )}
                 
@@ -101,14 +110,14 @@ export const Preview: React.FC = () => {
                    {msg.type === 'text' && (
                      <div 
                         className={`
-                          relative px-3 py-2.5 rounded-[6px] text-[16px] leading-[1.4] tracking-[-0.3px] break-words
+                          relative px-[12px] py-[9px] rounded-[6px] text-[16px] leading-[22px] tracking-[-0.2px] break-words
                           border shadow-[0_1px_1px_rgba(0,0,0,0.02)]
                           ${isMe 
                             ? 'bg-wechat-green border-wechat-green-border text-wechat-text' 
                             : 'bg-white border-wechat-bubble-white-border text-wechat-text'
                           }
                           /* Arrow pseudo-element */
-                          before:content-[''] before:absolute before:top-[14px] before:w-0 before:h-0 before:border-[6px] before:border-transparent
+                          before:content-[''] before:absolute before:top-[16px] before:w-0 before:h-0 before:border-[6px] before:border-transparent
                           ${isMe 
                              ? 'before:-right-[11px] before:border-l-wechat-green' 
                              : 'before:-left-[11px] before:border-r-white'
@@ -153,7 +162,7 @@ export const Preview: React.FC = () => {
                       className="w-full h-full object-cover"
                       alt="avatar"
                     />
-                    {config.isPrivacyMode && <div className="absolute inset-0 bg-white/85 pointer-events-none"></div>}
+                    {config.isPrivacyMode && <div className="privacy-mask privacy-mask-strong"></div>}
                   </div>
                 )}
               </div>
@@ -163,18 +172,20 @@ export const Preview: React.FC = () => {
 
         {/* WeChat Input Bar (Visual Only) */}
         {!config.showFooter && (
-          <div className="h-[56px] bg-wechat-toolbar border-t border-wechat-divider px-3 flex items-center gap-3 shrink-0">
-            <div className="flex-shrink-0">
-                <div className="w-7 h-7 rounded-full border border-black/80 flex items-center justify-center">
-                    <Mic size={16} className="text-black/80" strokeWidth={2} />
-                </div>
+          <div className="h-[54px] bg-[#f6f6f6] border-t border-wechat-divider px-3 flex items-center gap-3 shrink-0 shadow-[0_-0.5px_0_rgba(0,0,0,0.06)]">
+            <button className="flex-shrink-0">
+              <div className="w-8 h-8 rounded-full border border-black/70 bg-white flex items-center justify-center shadow-[0_0.5px_0_rgba(0,0,0,0.08)]">
+                <Mic size={17} className="text-black/80" strokeWidth={2} />
+              </div>
+            </button>
+            
+            <div className="flex-1 bg-white h-[38px] rounded-[8px] border border-wechat-divider px-3 flex items-center text-[15px] text-[#9b9b9b] shadow-inner">
+              <span className="truncate">按住 说话</span>
             </div>
             
-            <div className="flex-1 bg-white h-10 rounded-[6px] border border-wechat-divider"></div>
-            
-            <div className="flex-shrink-0 flex items-center gap-4">
-                <Smile size={28} className="text-black/80" strokeWidth={1.5} />
-                <PlusCircle size={28} className="text-black/80" strokeWidth={1.5} />
+            <div className="flex-shrink-0 flex items-center gap-3 text-black/80">
+              <Smile size={26} strokeWidth={1.6} />
+              <PlusCircle size={26} strokeWidth={1.6} />
             </div>
           </div>
         )}

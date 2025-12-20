@@ -49,6 +49,23 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
+
+      /* Privacy mosaic layers: avoid filter/blur so html2canvas can capture */
+      .privacy-mask {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-color: rgba(255, 255, 255, 0.85);
+        background-image:
+          linear-gradient(90deg, rgba(0, 0, 0, 0.06) 12.5%, transparent 12.5%, transparent 50%, rgba(0, 0, 0, 0.06) 50%, rgba(0, 0, 0, 0.06) 62.5%, transparent 62.5%, transparent 100%),
+          linear-gradient(0deg, rgba(0, 0, 0, 0.06) 12.5%, transparent 12.5%, transparent 50%, rgba(0, 0, 0, 0.06) 50%, rgba(0, 0, 0, 0.06) 62.5%, transparent 62.5%, transparent 100%);
+        background-size: 12px 12px;
+      }
+
+      .privacy-mask-strong {
+        background-color: rgba(255, 255, 255, 0.92);
+        background-size: 8px 8px;
+      }
     </style>
   <script type="importmap">
 {
