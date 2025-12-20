@@ -23,7 +23,12 @@ export interface GlobalConfig {
   battery: number;
   signal: 'wifi' | '5g' | '4g';
   chatTitle: string;
+  navBadge?: string;
   bgImage?: string;
+
+  // Role labels used for AI + UI context
+  rightRoleLabel: string; // role "me"
+  leftRoleLabel: string;  // role "other"
   
   // Settings
   isPrivacyMode: boolean;

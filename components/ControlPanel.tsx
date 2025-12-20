@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import { generateScript } from '../services/geminiService';
 import { fileToBase64, exportImage } from '../utils/imageUtils';
 import { 
-  Download, Wand2, Trash2, Image as ImageIcon, 
+  Download, Wand2, Trash2, Image as ImageIcon, Camera,
   ArrowUp, ArrowDown, Settings, MessageSquare, AlertCircle, Link as LinkIcon, Clock
 } from 'lucide-react';
 
@@ -23,7 +23,10 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ className }) => {
     setIsGenerating(true);
     setError(null);
     try {
-      const newMessages = await generateScript(prompt, 6);
+      const newMessages = await generateScript(prompt, 6, {
+        meRoleName: store.config.rightRoleLabel,
+        otherRoleName: store.config.leftRoleLabel,
+      });
       store.setMessages([...store.messages, ...newMessages]);
     } catch (err) {
       setError("生成失败，请重试");
@@ -36,6 +39,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ className }) => {
   const handleExport = async () => {
     try {
       await exportImage('preview-container', `wechat-mock-${Date.now()}.png`);
+    } catch (e) {
+      // Error handled in util
+    }
+  };
+
+  const handleCleanExport = async () => {
+    try {
+      await exportImage('preview-container', `wechat-mock-clean-${Date.now()}.png`, {
+        hideSelectors: ['.status-bar'],
+      });
     } catch (e) {
       // Error handled in util
     }
@@ -78,12 +91,20 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ className }) => {
           <MessageSquare className="text-wechat-green fill-current" />
           微信对话生成器
         </h1>
-        <button 
-          onClick={handleExport}
-          className="bg-wechat-green hover:bg-[#85d65c] text-black px-3 py-1.5 rounded text-sm font-medium flex items-center gap-2 transition-colors"
-        >
-          <Download size={16} /> 导出图片
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleCleanExport}
+            className="bg-white border border-gray-200 hover:border-indigo-200 hover:text-indigo-700 px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1 transition-colors text-gray-700"
+          >
+            <Camera size={16} /> 纯净截图
+          </button>
+          <button 
+            onClick={handleExport}
+            className="bg-wechat-green hover:bg-[#85d65c] text-black px-3 py-1.5 rounded text-sm font-medium flex items-center gap-2 transition-colors"
+          >
+            <Download size={16} /> 导出图片
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -128,6 +149,29 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ className }) => {
                   {isGenerating ? <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" /> : <Wand2 size={16} />}
                 </button>
               </div>
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-indigo-900/80 block mb-1">右侧身份 (role=me)</label>
+                  <input 
+                    type="text"
+                    value={store.config.rightRoleLabel}
+                    onChange={(e) => store.setConfig({ rightRoleLabel: e.target.value })}
+                    className="w-full text-sm border border-indigo-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    placeholder="例如：商家/客服"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-indigo-900/80 block mb-1">左侧身份 (role=other)</label>
+                  <input 
+                    type="text"
+                    value={store.config.leftRoleLabel}
+                    onChange={(e) => store.setConfig({ leftRoleLabel: e.target.value })}
+                    className="w-full text-sm border border-indigo-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    placeholder="例如：客户/用户"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-indigo-800/80 mt-2">AI 会按上方身份自动映射左右气泡，避免把商家/客户说反。</p>
               {error && <p className="text-red-500 text-xs mt-2 flex items-center gap-1"><AlertCircle size={12}/> {error}</p>}
             </div>
 
@@ -269,11 +313,11 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ className }) => {
             {/* Status Bar Section */}
             <section className="space-y-3">
                <h3 className="font-bold text-gray-700 text-sm border-b pb-1">顶部状态栏</h3>
-               <div className="grid grid-cols-2 gap-3">
-                 <div>
-                   <label className="text-xs text-gray-500 block mb-1">时间</label>
-                   <input 
-                    type="text" 
+             <div className="grid grid-cols-2 gap-3">
+               <div>
+                 <label className="text-xs text-gray-500 block mb-1">时间</label>
+                 <input 
+                  type="text" 
                     value={store.config.time} 
                     onChange={(e) => store.setConfig({ time: e.target.value })}
                     className="w-full text-sm border border-gray-300 rounded px-2 py-1.5"
@@ -302,14 +346,24 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ className }) => {
                  </div>
                  <div>
                    <label className="text-xs text-gray-500 block mb-1">聊天标题</label>
-                   <input 
+                 <input 
+                   type="text" 
+                   value={store.config.chatTitle} 
+                   onChange={(e) => store.setConfig({ chatTitle: e.target.value })}
+                   className="w-full text-sm border border-gray-300 rounded px-2 py-1.5"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">左侧徽标</label>
+                  <input 
                     type="text" 
-                    value={store.config.chatTitle} 
-                    onChange={(e) => store.setConfig({ chatTitle: e.target.value })}
+                    value={store.config.navBadge || ''} 
+                    onChange={(e) => store.setConfig({ navBadge: e.target.value })}
                     className="w-full text-sm border border-gray-300 rounded px-2 py-1.5"
-                   />
-                 </div>
-               </div>
+                    placeholder="例如：6183 或留空"
+                  />
+                </div>
+              </div>
             </section>
 
             {/* Avatars Section */}

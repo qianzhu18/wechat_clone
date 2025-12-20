@@ -1,5 +1,9 @@
 import html2canvas from 'html2canvas';
 
+interface ExportImageOptions {
+  hideSelectors?: string[];
+}
+
 export const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -52,23 +56,15 @@ const inlineExternalImages = async (element: HTMLElement) => {
   };
 };
 
-export const exportImage = async (elementId: string, fileName: string = 'wechat-mock.png') => {
+export const exportImage = async (elementId: string, fileName: string = 'wechat-mock.png', options: ExportImageOptions = {}) => {
   const element = document.getElementById(elementId);
   if (!element) {
     console.error(`Export failed: element #${elementId} not found.`);
     return;
   }
 
-  // 为保证 1:1，还原预览布局，使用克隆节点放到视口外渲染，避免 flex/隐藏状态导致尺寸缩放。
-  const rect = element.getBoundingClientRect();
-  const targetWidth = Math.max(element.clientWidth || rect.width || 0, 375);
-  const targetHeight = Math.max(element.scrollHeight || rect.height || 0, 812);
-  const dpr = window.devicePixelRatio || 1;
-
   const clone = element.cloneNode(true) as HTMLElement;
   clone.id = `${elementId}-export-clone`;
-  clone.style.width = `${targetWidth}px`;
-  clone.style.height = `${targetHeight}px`;
   clone.style.position = 'fixed';
   clone.style.left = '-99999px';
   clone.style.top = '0';
@@ -78,6 +74,12 @@ export const exportImage = async (elementId: string, fileName: string = 'wechat-
   clone.style.transform = 'none';
   document.body.appendChild(clone);
 
+  if (options.hideSelectors?.length) {
+    options.hideSelectors.forEach((selector) => {
+      clone.querySelectorAll<HTMLElement>(selector).forEach((node) => node.remove());
+    });
+  }
+
   // 解除滚动容器的裁剪，确保长对话完整导出
   const chatArea = clone.querySelector<HTMLElement>('#chat-scroll-area');
   if (chatArea) {
@@ -85,6 +87,13 @@ export const exportImage = async (elementId: string, fileName: string = 'wechat-
     chatArea.style.maxHeight = 'none';
     chatArea.style.height = 'auto';
   }
+
+  const rect = clone.getBoundingClientRect();
+  const targetWidth = Math.max(clone.clientWidth || rect.width || 0, 375);
+  const targetHeight = Math.max(clone.scrollHeight || rect.height || 0, 812);
+  clone.style.width = `${targetWidth}px`;
+  clone.style.height = `${targetHeight}px`;
+  const dpr = window.devicePixelRatio || 1;
 
   let restoreImages: (() => void) | null = null;
 

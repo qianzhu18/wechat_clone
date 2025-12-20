@@ -7,6 +7,9 @@ const DEFAULT_CONFIG = {
   battery: 95,
   signal: 'wifi' as const,
   chatTitle: '文件传输助手',
+  navBadge: '',
+  rightRoleLabel: '商家',
+  leftRoleLabel: '客户',
   isPrivacyMode: false,
   showFooter: false,
   // 使用内联 SVG，避免跨域图片导致导出失败
